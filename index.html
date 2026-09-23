@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BS9 PLAY - Play • Enjoy • Experience</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon"><i class="fa-solid fa-gamepad"></i></div>
+                <div class="logo-text">BS9 <span>PLAY</span></div>
+            </div>
+            <div class="header-actions">
+                <div class="wallet-badge" onclick="navigateTo('wallet')">
+                    <i class="fa-solid fa-coins"></i> <span id="header-balance">10,000</span>
+                </div>
+                <button class="icon-btn" id="notification-btn" title="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notification-dot"></span>
+                </button>
+                <button class="icon-btn" id="profile-btn" onclick="navigateTo('account')" title="Account">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- HOME PAGE -->
+            <section id="page-home" class="page active">
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <div class="hero-content">
+                        <h1 class="hero-title">WELCOME TO <br><span class="gradient-text">BS9 PLAY.</span></h1>
+                        <p class="hero-subtitle">ENJOY. <br>EXPERIENCE.</p>
+                        <p class="hero-desc">"Your mobile-first gaming lobby."</p>
+                        <button class="primary-btn" onclick="navigateTo('games')">Explore Games <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="floating-badge badge-1"><i class="fa-solid fa-rocket"></i> Crash 2.35x</div>
+                        <div class="floating-badge badge-2"><i class="fa-solid fa-dice"></i> Dice Win</div>
+                        <div class="abstract-shape"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Access Buttons -->
+                <div class="quick-access">
+                    <div class="qa-item" onclick="navigateTo('games')">
+                        <div class="qa-icon"><i class="fa-solid fa-gamepad"></i></div>
+                        <span>Games</span>
+                    </div>
+                    <div class="qa-item" onclick="navigateTo('wallet')">
+                        <div class="qa-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <span>Wallet</span>
+                    </div>
+                    <div class="qa-item" onclick="navigateTo('history')">
+                        <div class="qa-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <span>History</span>
+                    </div>
+                    <div class="qa-item" onclick="navigateTo('account')">
+                        <div class="qa-icon"><i class="fa-solid fa-user-gear"></i></div>
+                        <span>Account</span>
+                    </div>
+                </div>
+
+                <!-- Featured / Popular Games Section -->
+                <div class="section-header">
+                    <h2>Featured Games</h2>
+                    <span class="see-all" onclick="navigateTo('games')">See All</span>
+                </div>
+                <div class="horizontal-scroll" id="featured-games-container">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Promotional Banner -->
+                <div class="promo-banner">
+                    <div class="promo-content">
+                        <span class="promo-tag">DEMO MODE</span>
+                        <h3>BS9 PLAY DEMO</h3>
+                        <p>"Try the games with virtual coins"</p>
+                        <p class="promo-sub">"No real-money payments are enabled in this prototype."</p>
+                    </div>
+                    <div class="promo-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GAMES LOBBY PAGE -->
+            <section id="page-games" class="page">
+                <div class="page-title-area">
+                    <h2>GAME LOBBY</h2>
+                    <p>All Games</p>
+                </div>
+                
+                <div class="lobby-wallet-card">
+                    <div class="lw-info">
+                        <span>Virtual Balance</span>
+                        <h3 id="lobby-balance">🪙 10,000</h3>
+                    </div>
+                    <button class="sm-btn" onclick="resetDemoBalance()">Reset</button>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="filter-tabs">
+                    <button class="filter-btn active" onclick="filterGames('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterGames('popular', this)">Popular</button>
+                    <button class="filter-btn" onclick="filterGames('new', this)">New</button>
+                </div>
+
+                <!-- Games Grid -->
+                <div class="games-grid" id="games-grid-container">
+                    <!-- Populated via JS -->
+                </div>
+            </section>
+
+            <!-- WALLET PAGE -->
+            <section id="page-wallet" class="page">
+                <div class="page-title-area">
+                    <h2>VIRTUAL WALLET</h2>
+                    <p>Manage your demo credits</p>
+                </div>
+
+                <div class="large-wallet-card">
+                    <span class="lwc-title">DEMO WALLET</span>
+                    <h1 id="dashboard-wallet-balance">10,000</h1>
+                    <p>Virtual Coins</p>
+                    <button class="reset-coins-btn" onclick="resetDemoBalance()"><i class="fa-solid fa-rotate"></i> Reset Balance</button>
+                </div>
+
+                <div class="dashboard-actions">
+                    <button class="dash-action-btn" onclick="navigateTo('games')">
+                        <i class="fa-solid fa-gamepad"></i>
+                        <span>Play</span>
+                    </button>
+                    <button class="dash-action-btn" onclick="showDemoNotice('Deposit')">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>Deposit</span>
+                    </button>
+                    <button class="dash-action-btn" onclick="showDemoNotice('Withdrawal')">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                        <span>Withdraw</span>
+                    </button>
+                    <button class="dash-action-btn" onclick="navigateTo('history')">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>History</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- HISTORY PAGE -->
+            <section id="page-history" class="page">
+                <div class="page-title-area">
+                    <h2>RECENT ACTIVITY</h2>
+                    <p>Game History</p>
+                </div>
+
+                <div class="history-list" id="history-container">
+                    <!-- Populated via JS -->
+                </div>
+            </section>
+
+            <!-- ACCOUNT / LOGIN PAGE -->
+            <section id="page-account" class="page">
+                <!-- If not logged in -->
+                <div id="auth-container" class="auth-wrapper">
+                    <div class="auth-card glass-panel">
+                        <div class="auth-logo">
+                            <i class="fa-solid fa-gamepad"></i>
+                            <h2>BS9 PLAY</h2>
+                        </div>
+                        <h3>Sign in</h3>
+                        <p class="auth-sub">"Access your demo dashboard."</p>
+                        
+                        <form id="login-form" onsubmit="handleLogin(event)">
+                            <div class="input-group">
+                                <label>Email or Username</label>
+                                <input type="text" id="login-username" placeholder="Enter username or email" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Password</label>
+                                <input type="password" id="login-password" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="primary-btn full-width">Sign In</button>
+                        </form>
+
+                        <div class="auth-divider"><span>OR</span></div>
+
+                        <button class="secondary-btn full-width" onclick="handleGuestLogin()">Continue as Guest</button>
+
+                        <p class="auth-note">"Demo only • No account data is sent to a server."</p>
+                    </div>
+                </div>
+
+                <!-- If logged in (Dashboard) -->
+                <div id="user-dashboard" class="user-dash-wrapper" style="display: none;">
+                    <div class="dash-profile-card glass-panel">
+                        <div class="dp-avatar">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div class="dp-info">
+                            <span class="welcome-text">WELCOME</span>
+                            <h3 id="display-username">Guest</h3>
+                            <span class="status-badge">● Demo Account</span>
+                        </div>
+                    </div>
+
+                    <div class="large-wallet-card mini">
+                        <span class="lwc-title">DEMO WALLET</span>
+                        <h2 id="acc-wallet-balance">10,000</h2>
+                        <p>Virtual Coins</p>
+                        <button class="sm-btn" onclick="resetDemoBalance()">↻ Reset</button>
+                    </div>
+
+                    <div class="dashboard-actions">
+                        <button class="dash-action-btn" onclick="navigateTo('games')">
+                            <i class="fa-solid fa-gamepad"></i>
+                            <span>Play</span>
+                        </button>
+                        <button class="dash-action-btn" onclick="showDemoNotice('Deposit')">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <span>Deposit</span>
+                        </button>
+                        <button class="dash-action-btn" onclick="showDemoNotice('Withdrawal')">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                            <span>Withdraw</span>
+                        </button>
+                        <button class="dash-action-btn" onclick="navigateTo('history')">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>History</span>
+                        </button>
+                    </div>
+
+                    <button class="danger-btn full-width" onclick="handleLogout()" style="margin-top: 20px;">Sign Out</button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="navigateTo('home')" data-target="home">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('games')" data-target="games">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>Games</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('wallet')" data-target="wallet">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Wallet</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('account')" data-target="account">
+                <i class="fa-solid fa-user"></i>
+                <span>Account</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- GAME MODAL -->
+    <div class="game-modal-overlay" id="game-modal">
+        <div class="game-modal-content glass-panel">
+            <button class="close-modal-btn" onclick="closeGameModal()"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="modal-header-info">
+                <div class="modal-game-icon" id="modal-icon"><i class="fa-solid fa-rocket"></i></div>
+                <div>
+                    <h3 id="modal-game-name">Crash</h3>
+                    <p id="modal-game-desc">Multiplier-style demo</p>
+                </div>
+            </div>
+
+            <div class="game-play-area">
+                <div class="demo-screen" id="demo-screen-display">
+                    <i class="fa-solid fa-play-circle fa-3x"></i>
+                    <p>Ready to Play Demo</p>
+                </div>
+
+                <div class="stake-control">
+                    <label>Demo Coins (Stake)</label>
+                    <div class="stake-input-wrapper">
+                        <input type="number" id="demo-stake-input" value="100" min="10" max="1000">
+                        <div class="quick-stakes">
+                            <button onclick="setStake(50)">50</button>
+                            <button onclick="setStake(100)">100</button>
+                            <button onclick="setStake(500)">500</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="primary-btn full-width" id="play-demo-btn" onclick="playDemo()">PLAY DEMO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div class="toast-notification" id="toast-notification">
+        <span id="toast-message">Notification message</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
