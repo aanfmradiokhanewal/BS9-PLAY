@@ -28,6 +28,14 @@ let currentUsername = 'Guest';
 let gameHistory = [];
 let currentGame = null;
 
+// Crash Game Specific Variables
+let crashInterval = null;
+let currentMultiplier = 1.00;
+let crashTarget = 1.00;
+let isCrashPlaying = false;
+let crashStake = 100;
+let recentCrashResults = [1.84, 2.41, 1.12, 5.30, 1.67, 2.15, 1.05, 3.40, 1.45, 2.80];
+
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     loadLocalStorageData();
@@ -36,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory();
     updateBalanceDisplay();
     checkAuthState();
+    renderRecentCrashResults();
 });
 
 // LocalStorage Management
@@ -70,6 +79,11 @@ function saveToLocalStorage() {
 
 // Navigation System
 function navigateTo(pageId) {
+    if (pageId === 'crash-game') {
+        openCrashGameScreen();
+        return;
+    }
+
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
@@ -119,9 +133,10 @@ function renderGamesLobby(games) {
 }
 
 function createGameCardHTML(game) {
+    const clickAction = game.id === 'crash' ? "navigateTo('crash-game')" : `openGameModal('${game.id}')`;
     return `
         <div class="game-card">
-            <div class="game-thumbnail ${game.thumbClass}">
+            <div class="game-thumbnail ${game.thumbClass}" onclick="${clickAction}" style="cursor: pointer;">
                 <span class="game-badge ${game.badgeClass}">${game.badge}</span>
                 <div class="thumb-graphic"><i class="fa-solid ${game.icon}"></i></div>
             </div>
@@ -129,7 +144,7 @@ function createGameCardHTML(game) {
                 <h4>${game.name}</h4>
                 <p>${game.desc}</p>
             </div>
-            <button class="play-demo-sm-btn" onclick="openGameModal('${game.id}')">PLAY DEMO →</button>
+            <button class="play-demo-sm-btn" onclick="${clickAction}">PLAY DEMO →</button>
         </div>
     `;
 }
@@ -161,7 +176,195 @@ function handleSearchGames(query) {
     renderGamesLobby(filtered);
 }
 
-// Game Modal Logic
+// ==================================================
+// CRASH GAME FULLSCREEN LOGIC
+// ==================================================
+function openCrashGameScreen() {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    const crashPage = document.getElementById('page-crash-game');
+    if (crashPage) crashPage.classList.add('active');
+    updateBalanceDisplay();
+    renderRecentCrashResults();
+}
+
+function exitCrashGame() {
+    if (isCrashPlaying) {
+        notify("Round in progress! Please wait for it to finish.");
+        return;
+    }
+    navigateTo('home');
+}
+
+function setCrashStake(amount) {
+    document.getElementById('crash-stake-input').value = amount;
+}
+
+function renderRecentCrashResults() {
+    const container = document.getElementById('crash-recent-results');
+    if (!container) return;
+
+    container.innerHTML = '';
+    recentCrashResults.slice(-10).reverse().forEach(res => {
+        const isHigh = res >= 2.0;
+        container.innerHTML += `<div class="rr-pill ${isHigh ? 'high' : 'low'}">${res.toFixed(2)}x</div>`;
+    });
+}
+
+function startCrashRound() {
+    if (isCrashPlaying) return;
+
+    const stakeInput = document.getElementById('crash-stake-input');
+    const stake = parseInt(stakeInput.value);
+
+    if (isNaN(stake) || stake < 10) {
+        notify("Minimum stake is 10 virtual coins.");
+        return;
+    }
+
+    if (stake > 1000) {
+        notify("Maximum stake is 1000 virtual coins.");
+        return;
+    }
+
+    if (currentBalance < stake) {
+        notify("Insufficient demo coins! Reset balance.");
+        return;
+    }
+
+    crashStake = stake;
+    currentBalance -= stake;
+    updateBalanceDisplay();
+
+    isCrashPlaying = true;
+    currentMultiplier = 1.00;
+    
+    // Generate random crash point (e.g. between 1.10x and 8.50x)
+    const rand = Math.random();
+    if (rand < 0.15) {
+        crashTarget = parseFloat((1.01 + Math.random() * 0.15).toFixed(2)); // Instant or quick crash
+    } else {
+        crashTarget = parseFloat((1.20 + Math.random() * 7.5).toFixed(2));
+    }
+
+    const startBtn = document.getElementById('start-crash-btn');
+    const cashoutBtn = document.getElementById('cashout-crash-btn');
+    const multText = document.getElementById('crash-multiplier-text');
+    const statusText = document.getElementById('crash-status-text');
+    const rocketObj = document.getElementById('rocket-icon-obj');
+
+    startBtn.style.display = 'none';
+    cashoutBtn.style.display = 'block';
+    cashoutBtn.disabled = false;
+
+    multText.className = "multiplier-display";
+    statusText.innerText = "ROUND STARTED • FLYING...";
+
+    let startTime = Date.now();
+
+    crashInterval = setInterval(() => {
+        let elapsed = (Date.now() - startTime) / 1000;
+        // Smooth exponential multiplier curve
+        currentMultiplier = parseFloat((1.00 + Math.pow(elapsed, 1.4) * 0.35).toFixed(2));
+
+        multText.innerText = currentMultiplier.toFixed(2) + 'x';
+
+        // Animate rocket position inside arena
+        let posX = Math.min(elapsed * 25, 220);
+        let posY = Math.min(elapsed * 18, 140);
+        rocketObj.style.transform = `translate(${posX}px, -${posY}px) rotate(25deg)`;
+
+        if (currentMultiplier >= crashTarget) {
+            triggerCrashEnd(false, crashTarget);
+        }
+    }, 50);
+}
+
+function cashOutCrashRound() {
+    if (!isCrashPlaying) return;
+    clearInterval(crashInterval);
+
+    const winAmount = Math.floor(crashStake * currentMultiplier);
+    currentBalance += winAmount;
+    updateBalanceDisplay();
+
+    const multText = document.getElementById('crash-multiplier-text');
+    const statusText = document.getElementById('crash-status-text');
+    const cashoutBtn = document.getElementById('cashout-crash-btn');
+    const startBtn = document.getElementById('start-crash-btn');
+
+    multText.className = "multiplier-display cashed";
+    statusText.innerText = `DEMO WIN • CASHED OUT AT ${currentMultiplier.toFixed(2)}x`;
+    cashoutBtn.disabled = true;
+
+    recentCrashResults.push(currentMultiplier);
+    renderRecentCrashResults();
+
+    recordCrashHistory(crashStake, winAmount, currentMultiplier, 'Won');
+    saveToLocalStorage();
+
+    isCrashPlaying = false;
+    setTimeout(() => {
+        cashoutBtn.style.display = 'none';
+        startBtn.style.display = 'block';
+    }, 2000);
+}
+
+function triggerCrashEnd(isInstant, mult) {
+    clearInterval(crashInterval);
+    isCrashPlaying = false;
+
+    const crashVal = isInstant ? mult : crashTarget;
+    const multText = document.getElementById('crash-multiplier-text');
+    const statusText = document.getElementById('crash-status-text');
+    const cashoutBtn = document.getElementById('cashout-crash-btn');
+    const startBtn = document.getElementById('start-crash-btn');
+    const rocketObj = document.getElementById('rocket-icon-obj');
+
+    multText.innerText = crashVal.toFixed(2) + 'x';
+    multText.className = "multiplier-display crashed";
+    statusText.innerText = `CRASHED AT ${crashVal.toFixed(2)}x • TRY AGAIN`;
+    
+    // Crash explosion visual reset
+    rocketObj.style.transform = `translate(0px, 0px) rotate(90deg) scale(0.8)`;
+
+    recentCrashResults.push(crashVal);
+    renderRecentCrashResults();
+
+    recordCrashHistory(crashStake, 0, crashVal, 'Crashed');
+    saveToLocalStorage();
+
+    setTimeout(() => {
+        cashoutBtn.style.display = 'none';
+        startBtn.style.display = 'block';
+    }, 2000);
+}
+
+function recordCrashHistory(stake, returnAmt, multiplier, status) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    const isWin = status === 'Won';
+    const netResult = isWin ? `+${returnAmt - stake}` : `-${stake}`;
+
+    const record = {
+        name: 'Crash',
+        icon: 'fa-rocket',
+        datetime: `${dateStr}, ${timeStr}`,
+        stake: stake,
+        amount: netResult,
+        status: status,
+        multiplier: `${multiplier.toFixed(2)}x`
+    };
+
+    gameHistory.unshift(record);
+    if (gameHistory.length > 50) gameHistory.pop();
+    renderHistory();
+}
+
+// ==================================================
+// GENERAL GAME MODAL (For other games)
+// ==================================================
 function openGameModal(gameId) {
     const game = gamesData.find(g => g.id === gameId);
     if (!game) return;
@@ -189,20 +392,14 @@ function setStake(amount) {
     document.getElementById('demo-stake-input').value = amount;
 }
 
-// Play Demo Mechanics
-function playDemo() {
+function playGenericDemo() {
     if (!currentGame) return;
 
     const stakeInput = document.getElementById('demo-stake-input');
     const stake = parseInt(stakeInput.value);
 
-    if (isNaN(stake) || stake < 10) {
-        notify("Minimum stake is 10 virtual coins.");
-        return;
-    }
-
-    if (stake > 1000) {
-        notify("Maximum stake is 1000 virtual coins.");
+    if (isNaN(stake) || stake < 10 || stake > 1000) {
+        notify("Stake must be between 10 and 1000 coins.");
         return;
     }
 
@@ -211,7 +408,6 @@ function playDemo() {
         return;
     }
 
-    // Deduct stake temporarily
     currentBalance -= stake;
     updateBalanceDisplay();
 
@@ -219,24 +415,19 @@ function playDemo() {
     screenDisplay.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-purple);"></i><p>Simulating demo result...</p>`;
 
     setTimeout(() => {
-        const isWin = Math.random() > 0.42; // ~58% win chance for exciting demo experience
-        let resultText = "";
-        let netProfit = 0;
+        const isWin = Math.random() > 0.42;
+        let winAmount = 0;
 
         if (isWin) {
-            const multipliers = [1.5, 1.8, 2.2, 2.5, 3.0, 4.0];
-            const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
-            const totalReturn = Math.floor(stake * multiplier);
-            netProfit = totalReturn - stake; // profit earned
-            currentBalance += totalReturn;
+            const multipliers = [1.5, 2.0, 2.5, 3.0];
+            const mult = multipliers[Math.floor(Math.random() * multipliers.length)];
+            winAmount = Math.floor(stake * mult);
+            currentBalance += winAmount;
 
-            resultText = `🎉 Won +${totalReturn} coins (${multiplier}×)`;
-            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-check fa-2x" style="color: var(--accent-green);"></i><p style="color: var(--accent-green); font-weight:700;">${resultText}</p>`;
-            recordHistory(currentGame.name, currentGame.icon, stake, totalReturn, 'Won');
+            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-check fa-2x" style="color: var(--accent-green);"></i><p style="color: var(--accent-green); font-weight:700;">Won +${winAmount} coins (${mult}x)</p>`;
+            recordHistory(currentGame.name, currentGame.icon, stake, winAmount, 'Won');
         } else {
-            netProfit = -stake;
-            resultText = `Try Again — Lost ${stake} coins`;
-            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-xmark fa-2x" style="color: var(--accent-red);"></i><p style="color: var(--accent-red); font-weight:700;">${resultText}</p>`;
+            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-xmark fa-2x" style="color: var(--accent-red);"></i><p style="color: var(--accent-red); font-weight:700;">Lost ${stake} coins</p>`;
             recordHistory(currentGame.name, currentGame.icon, stake, 0, 'Lost');
         }
 
@@ -253,11 +444,13 @@ function updateBalanceDisplay() {
     const lobbyBal = document.getElementById('lobby-balance');
     const dashBal = document.getElementById('dashboard-wallet-balance');
     const accBal = document.getElementById('acc-wallet-balance');
+    const crashBal = document.getElementById('crash-screen-balance');
 
     if (headerBal) headerBal.innerText = formatted;
     if (lobbyBal) lobbyBal.innerText = `🪙 ${formatted}`;
     if (dashBal) dashBal.innerText = formatted;
     if (accBal) accBal.innerText = formatted;
+    if (crashBal) crashBal.innerText = formatted;
 }
 
 // Reset Balance
@@ -268,7 +461,7 @@ function resetDemoBalance() {
     notify("Demo balance restored to 10,000 coins.");
 }
 
-// History Management (Max 50 records)
+// History Management
 function recordHistory(gameName, gameIcon, stake, returnAmount, status) {
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -304,6 +497,7 @@ function renderHistory() {
     gameHistory.forEach(item => {
         const isWin = item.status === 'Won';
         const amountClass = isWin ? 'win' : 'loss';
+        const subInfo = item.multiplier ? `Mult: ${item.multiplier} | Stake: ${item.stake}` : `Stake: ${item.stake}`;
 
         container.innerHTML += `
             <div class="history-item">
@@ -316,7 +510,7 @@ function renderHistory() {
                 </div>
                 <div class="hi-amount ${amountClass}">
                     ${item.amount}
-                    <span class="hi-stake">Stake: ${item.stake}</span>
+                    <span class="hi-stake">${subInfo}</span>
                 </div>
             </div>
         `;
