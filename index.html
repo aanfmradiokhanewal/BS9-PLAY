@@ -272,6 +272,71 @@
                 </div>
             </section>
 
+            <!-- DEDICATED CRASH GAME SCREEN -->
+            <section id="page-crash-game" class="page crash-game-fullscreen">
+                <div class="crash-top-bar">
+                    <button class="back-to-lobby-btn" onclick="exitCrashGame()">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div class="crash-brand-header">
+                        <div class="logo-icon small">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </div>
+                        <span>BS9 PLAY • <strong>CRASH</strong></span>
+                    </div>
+                    <div class="crash-wallet-pill">
+                        🪙 <span id="crash-screen-balance">10,000</span>
+                    </div>
+                </div>
+
+                <div class="crash-main-arena">
+                    <!-- Recent Demo Results Bar -->
+                    <div class="recent-results-bar" id="crash-recent-results">
+                        <!-- Populated via JS -->
+                    </div>
+
+                    <!-- Game Visual Display Arena -->
+                    <div class="crash-display-box" id="crash-arena-box">
+                        <div class="crash-grid-bg"></div>
+                        <div class="multiplier-display" id="crash-multiplier-text">1.00x</div>
+                        <div class="crash-status-label" id="crash-status-text">WAITING FOR ROUND</div>
+                        
+                        <!-- SVG Rocket & Curve Animation -->
+                        <div class="rocket-flight-area" id="rocket-flight-container">
+                            <div class="rocket-object" id="rocket-icon-obj">
+                                <i class="fa-solid fa-rocket"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stake & Action Controls -->
+                    <div class="crash-controls-panel glass-panel">
+                        <div class="stake-control">
+                            <div class="stake-label-row">
+                                <label>Demo Stake (Coins)</label>
+                                <span class="stake-limits">Min: 10 | Max: 1000</span>
+                            </div>
+                            <div class="stake-input-wrapper">
+                                <input type="number" id="crash-stake-input" value="100" min="10" max="1000">
+                                <div class="quick-stakes">
+                                    <button onclick="setCrashStake(10)">10</button>
+                                    <button onclick="setCrashStake(50)">50</button>
+                                    <button onclick="setCrashStake(100)">100</button>
+                                    <button onclick="setCrashStake(500)">500</button>
+                                    <button onclick="setCrashStake(1000)">1000</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-btn-group">
+                            <button class="primary-btn full-width" id="start-crash-btn" onclick="startCrashRound()">START DEMO ROUND</button>
+                            <button class="cashout-btn full-width" id="cashout-crash-btn" onclick="cashOutCrashRound()" style="display: none;">CASH OUT</button>
+                        </div>
+                        <p class="demo-disclaimer-text">DEMO MODE ONLY • No real money or betting involved.</p>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <!-- Mobile Bottom Navigation Bar -->
@@ -295,7 +360,7 @@
         </nav>
     </div>
 
-    <!-- GAME MODAL -->
+    <!-- GENERAL GAME MODAL (For other games like Dice, Mines, etc.) -->
     <div class="game-modal-overlay" id="game-modal">
         <div class="game-modal-content glass-panel">
             <button class="close-modal-btn" onclick="closeGameModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -305,16 +370,14 @@
                     <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path></svg>
                 </div>
                 <div>
-                    <h3 id="modal-game-name">Crash</h3>
-                    <p id="modal-game-desc">Multiplier-style demo</p>
+                    <h3 id="modal-game-name">Dice</h3>
+                    <p id="modal-game-desc">Roll the virtual dice</p>
                 </div>
             </div>
 
             <div class="game-play-area">
                 <div class="demo-screen" id="demo-screen-display">
-                    <div class="game-screen-graphic" id="modal-graphic-preview">
-                        <i class="fa-solid fa-rocket fa-2x"></i>
-                    </div>
+                    <div class="game-screen-graphic"><i class="fa-solid fa-dice fa-2x"></i></div>
                     <p>Ready to Play Demo</p>
                 </div>
 
@@ -330,7 +393,7 @@
                     </div>
                 </div>
 
-                <button class="primary-btn full-width" id="play-demo-btn" onclick="playDemo()">PLAY DEMO</button>
+                <button class="primary-btn full-width" id="play-demo-btn" onclick="playGenericDemo()">PLAY DEMO</button>
             </div>
         </div>
     </div>
@@ -353,8 +416,8 @@
                     <span class="notif-time">Just now</span>
                 </div>
                 <div class="notif-item">
-                    <h4>New Games Added</h4>
-                    <p>Crash, Dice, Mines, and Slots are fully playable in demo mode.</p>
+                    <h4>Crash Game Upgraded</h4>
+                    <p>Experience our new full-screen immersive Crash demo with live multiplier & cash out!</p>
                     <span class="notif-time">Today</span>
                 </div>
             </div>
