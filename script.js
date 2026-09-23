@@ -1,1254 +1,395 @@
-:root {
-    --bg-main: #07080c;
-    --bg-card: rgba(18, 20, 32, 0.75);
-    --bg-card-hover: rgba(28, 32, 50, 0.85);
-    --border-color: rgba(139, 92, 246, 0.22);
-    --primary-purple: #8b5cf6;
-    --primary-glow: rgba(139, 92, 246, 0.45);
-    --accent-cyan: #06b6d4;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --nav-height: 70px;
-}
+/* 
+  ==================================================
+  BS9 PLAY - FRONT-END DEMO SCRIPT
+  THIS IS DEMO ONLY
+  - No real money
+  - No deposits
+  - No withdrawals
+  - No payment gateway
+  - No crypto
+  - No bank integration
+  - No real-money betting
+  ==================================================
+*/
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Outfit', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-}
+// Game Database with Custom Thumbnails and Badges
+const gamesData = [
+    { id: 'crash', name: 'Crash', desc: 'Multiplier-style demo', icon: 'fa-rocket', category: 'popular', badge: 'HOT', badgeClass: 'badge-hot', thumbClass: 'thumb-crash' },
+    { id: 'dice', name: 'Dice', desc: 'Roll the virtual dice', icon: 'fa-dice', category: 'popular', badge: 'POP', badgeClass: 'badge-pop', thumbClass: 'thumb-dice' },
+    { id: 'mines', name: 'Mines', desc: 'Find a safe tile', icon: 'fa-bomb', category: 'new', badge: 'NEW', badgeClass: 'badge-new', thumbClass: 'thumb-mines' },
+    { id: 'color', name: 'Color Game', desc: 'Choose a color', icon: 'fa-palette', category: 'popular', badge: 'HOT', badgeClass: 'badge-hot', thumbClass: 'thumb-color' },
+    { id: 'slots', name: 'Slots', desc: 'Slot-style demo', icon: 'fa-slot-machine', category: 'new', badge: 'NEW', badgeClass: 'badge-new', thumbClass: 'thumb-slots' },
+    { id: 'cards', name: 'Cards', desc: 'Card-style demo', icon: 'fa-clone', category: 'all', badge: 'POP', badgeClass: 'badge-pop', thumbClass: 'thumb-cards' }
+];
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.1) 0%, transparent 45%);
-}
+// App State
+let currentBalance = 10000;
+let currentUsername = 'Guest';
+let gameHistory = [];
+let currentGame = null;
 
-.app-container {
-    width: 100%;
-    max-width: 480px;
-    height: 100vh;
-    max-height: 950px;
-    background: var(--bg-main);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    overflow: hidden;
-}
+// Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    loadLocalStorageData();
+    renderFeaturedGames();
+    renderGamesLobby(gamesData);
+    renderHistory();
+    updateBalanceDisplay();
+    checkAuthState();
+});
 
-@media (min-width: 481px) {
-    .app-container {
-        border-radius: 28px;
-        height: 92vh;
+// LocalStorage Management
+function loadLocalStorageData() {
+    const savedBalance = localStorage.getItem('bs9_balance');
+    if (savedBalance !== null) {
+        currentBalance = parseInt(savedBalance);
+    } else {
+        localStorage.setItem('bs9_balance', currentBalance);
+    }
+
+    const savedUser = localStorage.getItem('bs9_username');
+    if (savedUser !== null) {
+        currentUsername = savedUser;
+    }
+
+    const savedHistory = localStorage.getItem('bs9_history');
+    if (savedHistory !== null) {
+        try {
+            gameHistory = JSON.parse(savedHistory);
+        } catch (e) {
+            gameHistory = [];
+        }
     }
 }
 
-/* Header */
-.app-header {
-    height: 65px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    background: rgba(7, 8, 12, 0.92);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.logo-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.logo-icon {
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 0 15px var(--primary-glow);
-}
-
-.logo-icon.small {
-    width: 32px;
-    height: 32px;
-}
-
-.logo-text {
-    font-weight: 800;
-    font-size: 1.2rem;
-    letter-spacing: 0.5px;
-}
-
-.logo-text span {
-    color: var(--primary-purple);
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.wallet-badge {
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.35);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--accent-cyan);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.wallet-badge:hover {
-    background: rgba(139, 92, 246, 0.25);
-}
-
-.icon-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: 0.2s;
-}
-
-.icon-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--primary-purple);
-}
-
-.notification-dot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 7px;
-    height: 7px;
-    background: var(--accent-cyan);
-    border-radius: 50%;
-}
-
-/* Main Content & Pages */
-.main-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    padding-bottom: calc(var(--nav-height) + 20px);
-    position: relative;
-    scroll-behavior: smooth;
-}
-
-.main-content::-webkit-scrollbar {
-    display: none;
-}
-
-.page {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.page.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, rgba(18, 20, 32, 0.92), rgba(10, 11, 18, 0.92)),
-                radial-gradient(circle at top right, rgba(139, 92, 246, 0.25), transparent);
-    border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 24px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-}
-
-.hero-content {
-    flex: 1.3;
-    z-index: 2;
-}
-
-.hero-tag {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--accent-cyan);
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 6px;
-}
-
-.hero-title {
-    font-size: 1.45rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 6px;
-}
-
-.gradient-text {
-    background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--accent-cyan);
-    margin-bottom: 6px;
-    letter-spacing: 0.5px;
-}
-
-.hero-desc {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-}
-
-.hero-visual {
-    flex: 0.7;
-    position: relative;
-    height: 140px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cyber-orb {
-    width: 110px;
-    height: 110px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.floating-badge {
-    position: absolute;
-    background: rgba(18, 20, 32, 0.95);
-    border: 1px solid var(--border-color);
-    padding: 5px 10px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 3;
-}
-
-.badge-1 { top: 5px; right: -5px; color: var(--accent-cyan); animation: float 3s ease-in-out infinite; }
-.badge-2 { bottom: 5px; left: -10px; color: var(--primary-purple); animation: float 3s ease-in-out infinite 1.5s; }
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-/* Quick Access */
-.quick-access {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.qa-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 18px;
-    padding: 14px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.qa-item:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--primary-purple);
-    transform: translateY(-2px);
-}
-
-.qa-icon {
-    width: 40px;
-    height: 40px;
-    background: rgba(139, 92, 246, 0.15);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-purple);
-    font-size: 1.1rem;
-}
-
-.qa-item span {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-/* Section Headers */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.section-header h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.see-all {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--accent-cyan);
-    cursor: pointer;
-}
-
-/* Horizontal Scroll */
-.horizontal-scroll {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 10px;
-    margin-bottom: 24px;
-    scroll-snap-type: x mandatory;
-}
-
-.horizontal-scroll::-webkit-scrollbar {
-    display: none;
-}
-
-/* Game Card (Rich Thumbnails) */
-.game-card {
-    min-width: 170px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    scroll-snap-align: start;
-    position: relative;
-    transition: 0.25s ease;
-}
-
-.game-card:hover {
-    border-color: var(--primary-purple);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
-}
-
-.game-thumbnail {
-    width: 100%;
-    height: 95px;
-    border-radius: 14px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-}
-
-/* Individual Game Thumbnail Styles */
-.thumb-crash { background: linear-gradient(135deg, #311042, #111827); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
-.thumb-dice { background: linear-gradient(135deg, #102a43, #0f172a); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--accent-cyan); }
-.thumb-mines { background: linear-gradient(135deg, #3b1f11, #111827); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; }
-.thumb-color { background: linear-gradient(135deg, #1b1035, #111827); border: 1px solid rgba(139, 92, 246, 0.3); color: var(--primary-purple); }
-.thumb-slots { background: linear-gradient(135deg, #113826, #111827); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--accent-green); }
-.thumb-cards { background: linear-gradient(135deg, #2a1122, #111827); border: 1px solid rgba(236, 72, 153, 0.3); color: #ec4899; }
-
-.thumb-graphic {
-    font-size: 2rem;
-    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
-}
-
-.game-badge {
-    position: absolute;
-    top: 8px; right: 8px;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-}
-.badge-hot { color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-.badge-new { color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
-.badge-pop { color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); }
-
-.game-info h4 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.game-info p {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.play-demo-sm-btn {
-    background: linear-gradient(135deg, var(--primary-purple), #7c3aed);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 7px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-}
-
-.play-demo-sm-btn:hover {
-    opacity: 0.9;
-    box-shadow: 0 4px 15px var(--primary-glow);
-}
-
-/* Promotional Banner */
-.promo-banner {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(6, 182, 212, 0.18));
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.promo-tag {
-    background: rgba(139, 92, 246, 0.3);
-    color: var(--accent-cyan);
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    display: inline-block;
-    margin-bottom: 6px;
-    border: 1px solid rgba(139, 92, 246, 0.4);
-}
-
-.promo-banner h3 {
-    font-size: 1.05rem;
-    font-weight: 800;
-    margin-bottom: 4px;
-}
-
-.promo-banner p {
-    font-size: 0.8rem;
-    color: var(--text-main);
-}
-
-.promo-sub {
-    font-size: 0.7rem !important;
-    color: var(--text-muted) !important;
-    margin-top: 2px;
-}
-
-/* Games Lobby */
-.page-title-area {
-    margin-bottom: 16px;
-}
-
-.page-title-area h2 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-}
-
-.page-title-area p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-.lobby-wallet-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.lw-info span {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-}
-
-.lw-info h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--accent-cyan);
-}
-
-.sm-btn {
-    background: rgba(139, 92, 246, 0.2);
-    border: 1px solid rgba(139, 92, 246, 0.4);
-    color: var(--text-main);
-    padding: 6px 14px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.sm-btn:hover {
-    background: var(--primary-purple);
-}
-
-.search-box-wrapper {
-    position: relative;
-    margin-bottom: 14px;
-}
-
-.search-box-wrapper i {
-    position: absolute;
-    top: 50%; left: 14px;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-.search-box-wrapper input {
-    width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 12px 14px 12px 40px;
-    color: var(--text-main);
-    font-size: 0.85rem;
-    outline: none;
-    transition: 0.2s;
-}
-
-.search-box-wrapper input:focus {
-    border-color: var(--primary-purple);
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
-.filter-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-}
-
-.filter-btn {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.filter-btn.active, .filter-btn:hover {
-    background: rgba(139, 92, 246, 0.22);
-    color: var(--text-main);
-    border-color: var(--primary-purple);
-}
-
-.games-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-}
-
-@media (min-width: 481px) {
-    .games-grid {
-        grid-template-columns: repeat(3, 1fr);
+function saveToLocalStorage() {
+    localStorage.setItem('bs9_balance', currentBalance);
+    localStorage.setItem('bs9_username', currentUsername);
+    localStorage.setItem('bs9_history', JSON.stringify(gameHistory));
+}
+
+// Navigation System
+function navigateTo(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    const targetPage = document.getElementById(`page-${pageId}`);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-target') === pageId) {
+            item.classList.add('active');
+        }
+    });
+
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.scrollTop = 0;
     }
 }
 
-.games-grid .game-card {
-    min-width: unset;
-}
-
-/* Wallet Page */
-.large-wallet-card {
-    background: linear-gradient(135deg, rgba(18, 20, 32, 0.95), rgba(10, 11, 18, 0.95));
-    border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 26px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-}
-
-.large-wallet-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--primary-purple), var(--accent-cyan));
-}
-
-.lwc-title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 8px;
-}
-
-.large-wallet-card h1, .large-wallet-card h2 {
-    font-size: 2.3rem;
-    font-weight: 800;
-    color: var(--accent-cyan);
-    margin-bottom: 4px;
-}
-
-.large-wallet-card.mini h2 {
-    font-size: 1.7rem;
-}
-
-.large-wallet-card p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-}
-
-.reset-coins-btn {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.reset-coins-btn:hover {
-    background: rgba(239, 68, 68, 0.25);
-}
-
-.dashboard-actions {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.dash-action-btn {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.dash-action-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--primary-purple);
-}
-
-.dash-action-btn i {
-    font-size: 1.2rem;
-    color: var(--primary-purple);
-}
-
-.dash-action-btn span {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-/* History Page */
-.history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.history-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.hi-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.hi-icon {
-    width: 38px;
-    height: 38px;
-    background: rgba(139, 92, 246, 0.15);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-cyan);
-    font-size: 1rem;
-}
-
-.hi-details h4 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.hi-details span {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-}
-
-.hi-amount {
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-align: right;
-}
-
-.hi-stake {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    display: block;
-}
-
-.hi-amount.win {
-    color: var(--accent-green);
-}
-
-.hi-amount.loss {
-    color: var(--accent-red);
-}
-
-.empty-history {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-/* Account & Auth */
-.auth-wrapper, .user-dash-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 75vh;
-}
-
-.glass-panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(14px);
-    border-radius: 24px;
-    padding: 24px;
-    width: 100%;
-}
-
-.auth-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 18px;
-}
-
-.auth-logo h2 {
-    font-size: 1.15rem;
-    font-weight: 800;
-}
-
-.auth-card h3, .user-dash-wrapper h3 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin-bottom: 4px;
-}
-
-.auth-sub {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-bottom: 18px;
-}
-
-.input-group {
-    margin-bottom: 14px;
-    text-align: left;
-}
-
-.input-group label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    display: block;
-    margin-bottom: 5px;
-}
-
-.input-group input {
-    width: 100%;
-    background: rgba(7, 8, 12, 0.6);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 11px 14px;
-    color: var(--text-main);
-    font-size: 0.88rem;
-    outline: none;
-    transition: 0.2s;
-}
-
-.input-group input:focus {
-    border-color: var(--primary-purple);
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, var(--primary-purple), #7c3aed);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    padding: 12px 20px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-    box-shadow: 0 5px 20px var(--primary-glow);
-}
-
-.primary-btn.sm {
-    padding: 8px 16px;
-    font-size: 0.78rem;
-}
-
-.primary-btn:hover {
-    opacity: 0.95;
-    transform: translateY(-1px);
-}
-
-.secondary-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    border-radius: 14px;
-    padding: 12px 20px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.secondary-btn:hover {
-    background: rgba(255, 255, 255, 0.09);
-}
-
-.danger-btn {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
-    border-radius: 14px;
-    padding: 12px 20px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.danger-btn:hover {
-    background: rgba(239, 68, 68, 0.25);
-}
-
-.full-width {
-    width: 100%;
-}
-
-.auth-divider {
-    text-align: center;
-    margin: 14px 0;
-    position: relative;
-}
-
-.auth-divider span {
-    background: var(--bg-card);
-    padding: 0 10px;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    position: relative;
-    z-index: 1;
-}
-
-.auth-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 0; right: 0;
-    height: 1px;
-    background: var(--border-color);
-}
-
-.auth-note {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    text-align: center;
-    margin-top: 14px;
-}
-
-.user-dash-wrapper {
-    flex-direction: column;
-    gap: 14px;
-    align-items: stretch;
-}
-
-.dash-profile-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.dp-avatar {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-purple), var(--accent-cyan));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-}
-
-.dp-info .welcome-text {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-}
-
-.dp-info h3 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin: 2px 0;
-}
-
-.status-badge {
-    font-size: 0.65rem;
-    color: var(--accent-green);
-    font-weight: 600;
-}
-
-/* Bottom Navigation */
-.bottom-nav {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: var(--nav-height);
-    background: rgba(7, 8, 12, 0.94);
-    backdrop-filter: blur(14px);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 100;
-}
-
-.nav-item {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: 0.2s;
-    width: 25%;
-}
-
-.nav-item i {
-    font-size: 1.1rem;
-}
-
-.nav-item span {
-    font-size: 0.68rem;
-    font-weight: 600;
-}
-
-.nav-item.active, .nav-item:hover {
-    color: var(--primary-purple);
-}
-
-.nav-item.active i {
-    filter: drop-shadow(0 0 8px var(--primary-glow));
-}
-
-/* Game Modal & Notification Modal */
-.game-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: 0.3s ease;
-    padding: 20px;
-}
-
-.game-modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.game-modal-content {
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    transform: scale(0.95);
-    transition: 0.3s ease;
-}
-
-.game-modal-overlay.active .game-modal-content {
-    transform: scale(1);
-}
-
-.close-modal-btn {
-    position: absolute;
-    top: 16px; right: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: 0.2s;
-    z-index: 5;
-}
-
-.close-modal-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: var(--accent-red);
-}
-
-.modal-header-info {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 18px;
-}
-
-.modal-game-icon {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    color: var(--accent-cyan);
-}
-
-.modal-header-info h3 {
-    font-size: 1.1rem;
-    font-weight: 800;
-}
-
-.modal-header-info p {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-}
-
-.demo-screen {
-    background: rgba(7, 8, 12, 0.85);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    height: 130px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    color: var(--text-muted);
-    font-size: 0.82rem;
-    text-align: center;
-    padding: 0 16px;
-}
-
-.game-screen-graphic {
-    font-size: 1.8rem;
-    color: var(--accent-cyan);
-    margin-bottom: 4px;
-}
-
-.stake-control {
-    margin-bottom: 18px;
-}
-
-.stake-control label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    display: block;
-    margin-bottom: 5px;
-}
-
-.stake-input-wrapper {
-    display: flex;
-    gap: 8px;
-}
-
-.stake-input-wrapper input {
-    flex: 1;
-    background: rgba(7, 8, 12, 0.6);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 10px 14px;
-    color: var(--text-main);
-    font-size: 0.9rem;
-    font-weight: 700;
-    outline: none;
-}
-
-.quick-stakes {
-    display: flex;
-    gap: 4px;
-}
-
-.quick-stakes button {
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    color: var(--accent-cyan);
-    padding: 0 10px;
-    border-radius: 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.quick-stakes button:hover {
-    background: rgba(139, 92, 246, 0.3);
-}
-
-/* Notifications inside modal */
-.notification-body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.notif-item {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px;
-}
-
-.notif-item h4 {
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.notif-item p {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
-
-.notif-time {
-    font-size: 0.65rem;
-    color: var(--primary-purple);
-}
-
-/* Toast Notification */
-.toast-notification {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(18, 20, 32, 0.95);
-    border: 1px solid var(--primary-purple);
-    backdrop-filter: blur(12px);
-    padding: 10px 20px;
-    border-radius: 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-main);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    opacity: 0;
-    pointer-events: none;
-    transition: 0.3s ease;
-    z-index: 2000;
-    white-space: nowrap;
-}
-
-.toast-notification.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+// Render Featured Games (Horizontal Scroll)
+function renderFeaturedGames() {
+    const container = document.getElementById('featured-games-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    gamesData.slice(0, 4).forEach(game => {
+        container.innerHTML += createGameCardHTML(game);
+    });
+}
+
+// Render Games Lobby
+function renderGamesLobby(games) {
+    const container = document.getElementById('games-grid-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    if (games.length === 0) {
+        container.innerHTML = `<div class="empty-history" style="grid-column: span 2;">No games found matching your search.</div>`;
+        return;
+    }
+    games.forEach(game => {
+        container.innerHTML += createGameCardHTML(game);
+    });
+}
+
+function createGameCardHTML(game) {
+    return `
+        <div class="game-card">
+            <div class="game-thumbnail ${game.thumbClass}">
+                <span class="game-badge ${game.badgeClass}">${game.badge}</span>
+                <div class="thumb-graphic"><i class="fa-solid ${game.icon}"></i></div>
+            </div>
+            <div class="game-info">
+                <h4>${game.name}</h4>
+                <p>${game.desc}</p>
+            </div>
+            <button class="play-demo-sm-btn" onclick="openGameModal('${game.id}')">PLAY DEMO →</button>
+        </div>
+    `;
+}
+
+// Filter Games
+function filterGames(category, btnElement) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    const searchInput = document.getElementById('game-search-input');
+    if (searchInput) searchInput.value = '';
+
+    if (category === 'all') {
+        renderGamesLobby(gamesData);
+    } else {
+        const filtered = gamesData.filter(g => g.category === category);
+        renderGamesLobby(filtered);
+    }
+}
+
+// Search Games
+function handleSearchGames(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) {
+        renderGamesLobby(gamesData);
+        return;
+    }
+    const filtered = gamesData.filter(g => g.name.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q));
+    renderGamesLobby(filtered);
+}
+
+// Game Modal Logic
+function openGameModal(gameId) {
+    const game = gamesData.find(g => g.id === gameId);
+    if (!game) return;
+
+    currentGame = game;
+    document.getElementById('modal-icon').innerHTML = `<i class="fa-solid ${game.icon}"></i>`;
+    document.getElementById('modal-game-name').innerText = game.name;
+    document.getElementById('modal-game-desc').innerText = game.desc;
+    document.getElementById('demo-stake-input').value = 100;
+    
+    document.getElementById('demo-screen-display').innerHTML = `
+        <div class="game-screen-graphic"><i class="fa-solid ${game.icon} fa-2x"></i></div>
+        <p>Ready to play ${game.name} demo</p>
+    `;
+
+    document.getElementById('game-modal').classList.add('active');
+}
+
+function closeGameModal() {
+    document.getElementById('game-modal').classList.remove('active');
+    currentGame = null;
+}
+
+function setStake(amount) {
+    document.getElementById('demo-stake-input').value = amount;
+}
+
+// Play Demo Mechanics
+function playDemo() {
+    if (!currentGame) return;
+
+    const stakeInput = document.getElementById('demo-stake-input');
+    const stake = parseInt(stakeInput.value);
+
+    if (isNaN(stake) || stake < 10) {
+        notify("Minimum stake is 10 virtual coins.");
+        return;
+    }
+
+    if (stake > 1000) {
+        notify("Maximum stake is 1000 virtual coins.");
+        return;
+    }
+
+    if (currentBalance < stake) {
+        notify("Insufficient demo coins! Reset balance.");
+        return;
+    }
+
+    // Deduct stake temporarily
+    currentBalance -= stake;
+    updateBalanceDisplay();
+
+    const screenDisplay = document.getElementById('demo-screen-display');
+    screenDisplay.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-purple);"></i><p>Simulating demo result...</p>`;
+
+    setTimeout(() => {
+        const isWin = Math.random() > 0.42; // ~58% win chance for exciting demo experience
+        let resultText = "";
+        let netProfit = 0;
+
+        if (isWin) {
+            const multipliers = [1.5, 1.8, 2.2, 2.5, 3.0, 4.0];
+            const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+            const totalReturn = Math.floor(stake * multiplier);
+            netProfit = totalReturn - stake; // profit earned
+            currentBalance += totalReturn;
+
+            resultText = `🎉 Won +${totalReturn} coins (${multiplier}×)`;
+            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-check fa-2x" style="color: var(--accent-green);"></i><p style="color: var(--accent-green); font-weight:700;">${resultText}</p>`;
+            recordHistory(currentGame.name, currentGame.icon, stake, totalReturn, 'Won');
+        } else {
+            netProfit = -stake;
+            resultText = `Try Again — Lost ${stake} coins`;
+            screenDisplay.innerHTML = `<i class="fa-solid fa-circle-xmark fa-2x" style="color: var(--accent-red);"></i><p style="color: var(--accent-red); font-weight:700;">${resultText}</p>`;
+            recordHistory(currentGame.name, currentGame.icon, stake, 0, 'Lost');
+        }
+
+        updateBalanceDisplay();
+        saveToLocalStorage();
+    }, 700);
+}
+
+// Balance Display Update
+function updateBalanceDisplay() {
+    const formatted = currentBalance.toLocaleString();
+    
+    const headerBal = document.getElementById('header-balance');
+    const lobbyBal = document.getElementById('lobby-balance');
+    const dashBal = document.getElementById('dashboard-wallet-balance');
+    const accBal = document.getElementById('acc-wallet-balance');
+
+    if (headerBal) headerBal.innerText = formatted;
+    if (lobbyBal) lobbyBal.innerText = `🪙 ${formatted}`;
+    if (dashBal) dashBal.innerText = formatted;
+    if (accBal) accBal.innerText = formatted;
+}
+
+// Reset Balance
+function resetDemoBalance() {
+    currentBalance = 10000;
+    updateBalanceDisplay();
+    saveToLocalStorage();
+    notify("Demo balance restored to 10,000 coins.");
+}
+
+// History Management (Max 50 records)
+function recordHistory(gameName, gameIcon, stake, returnAmount, status) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    const isWin = status === 'Won';
+    const netResult = isWin ? `+${returnAmount - stake}` : `-${stake}`;
+
+    const record = {
+        name: gameName,
+        icon: gameIcon,
+        datetime: `${dateStr}, ${timeStr}`,
+        stake: stake,
+        amount: netResult,
+        status: status
+    };
+
+    gameHistory.unshift(record);
+    if (gameHistory.length > 50) gameHistory.pop();
+    renderHistory();
+}
+
+function renderHistory() {
+    const container = document.getElementById('history-container');
+    if (!container) return;
+
+    if (gameHistory.length === 0) {
+        container.innerHTML = `<div class="empty-history">No recent game activity found. Play a demo game!</div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    gameHistory.forEach(item => {
+        const isWin = item.status === 'Won';
+        const amountClass = isWin ? 'win' : 'loss';
+
+        container.innerHTML += `
+            <div class="history-item">
+                <div class="hi-left">
+                    <div class="hi-icon"><i class="fa-solid ${item.icon}"></i></div>
+                    <div class="hi-details">
+                        <h4>${item.name}</h4>
+                        <span>${item.datetime}</span>
+                    </div>
+                </div>
+                <div class="hi-amount ${amountClass}">
+                    ${item.amount}
+                    <span class="hi-stake">Stake: ${item.stake}</span>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Authentication & Account
+function handleLogin(e) {
+    e.preventDefault();
+    const usernameInput = document.getElementById('login-username').value.trim();
+    if (!usernameInput) return;
+
+    currentUsername = usernameInput;
+    saveToLocalStorage();
+    checkAuthState();
+    notify(`Welcome back, ${currentUsername}!`);
+}
+
+function handleGuestLogin() {
+    currentUsername = 'Guest';
+    saveToLocalStorage();
+    checkAuthState();
+    notify("Logged in as Guest.");
+}
+
+function handleLogout() {
+    currentUsername = 'Guest';
+    saveToLocalStorage();
+    checkAuthState();
+    notify("Signed out successfully.");
+}
+
+function checkAuthState() {
+    const authContainer = document.getElementById('auth-container');
+    const userDashboard = document.getElementById('user-dashboard');
+    const displayName = document.getElementById('display-username');
+
+    if (currentUsername && currentUsername !== 'Guest') {
+        if (authContainer) authContainer.style.display = 'none';
+        if (userDashboard) userDashboard.style.display = 'flex';
+        if (displayName) displayName.innerText = currentUsername;
+    } else {
+        if (authContainer) authContainer.style.display = 'flex';
+        if (userDashboard) userDashboard.style.display = 'none';
+    }
+}
+
+// Notifications Modal
+function openNotifications() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeNotifications() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+// Notice Helper for Demo Mode
+function showDemoNotice(actionType) {
+    notify(`${actionType} is disabled in Demo Mode. (Virtual Coins only)`);
+}
+
+// Toast Notification Helper
+function notify(message) {
+    const toast = document.getElementById('toast-notification');
+    const msgSpan = document.getElementById('toast-message');
+    if (!toast || !msgSpan) return;
+
+    msgSpan.innerText = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500);
 }
